@@ -891,20 +891,23 @@ contenido. La carpeta `api_facturas/` es lo de menos; lo que se copia es
 
 ## 10. Dónde vamos
 
-El plan de arriba son **instrucciones para ejecutar**. Esta tabla es lo
-único que lleva la cuenta del avance, y se actualiza a medida que cada
-paso se cierra:
+**La v1 está TERMINADA y etiquetada `v1`.** Los siete criterios de
+aceptación se verificaron contra el sistema corriendo, no de palabra.
 
 | Paso | Estado |
 |---|---|
 | 1 — Esqueleto | ✅ hecho |
-| 2 — Los documentos | ⏳ en curso |
-| 3 — La base de datos | pendiente |
-| 4 — Docker | pendiente |
-| 5 — La API | pendiente |
-| 6 — Smoke test | pendiente |
-| 7 — Material de apoyo | pendiente |
-| 8 — Cierre y tag `v1` | pendiente |
+| 2 — Los documentos | ✅ hecho |
+| 3 — La base de datos | ✅ hecho |
+| 4 — Docker | ✅ hecho |
+| 5 — La API | ✅ hecho |
+| 6 — Smoke test | ✅ **7 de 7 criterios en verde** |
+| 7 — Material de apoyo | ✅ hecho |
+| 8 — Cierre y tag `v1` | ✅ hecho |
+
+**Lo único que queda abierto, y a propósito:** el `9_checklist.md` está sin
+firmar. Ese documento dice que **las casillas las marca una persona**, y esa
+firma no la puede poner quien construyó.
 
 **La regla de trabajo:** cada paso se **explica antes** de ejecutarlo —qué
 se va a hacer, por qué, para qué y cuál es el resultado esperado— y se
