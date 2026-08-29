@@ -1,0 +1,57 @@
+# ==============================================================
+# Módulo INNOVACIÓN CURRICULAR — versión 1
+#
+#   Navegador → API innovación (C#, :8072) → SQL Server (innovacion_local)
+#
+# Uso: docker compose up -d --build     (UN solo comando)
+# Reset de la BD: docker compose down -v && docker compose up -d
+#
+# Compose v2 ignora la directiva 'version:' y advierte que está obsoleta:
+# por eso no aparece.
+# ==============================================================
+services:
+
+  # --- SQL Server 2022: el único motor del proyecto ---
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: innovacion-sqlserver
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      # Contraseña a la vista: excepción declarada del Artículo 7 — plantilla
+      # didáctica en contenedores desechables. En un proyecto real va en .env.
+      - MSSQL_SA_PASSWORD=Aplicacionweb123!
+    ports:
+      - "11471:1433"
+    volumes:
+      - mssqldata:/var/opt/mssql
+    healthcheck:
+      # No basta con que el contenedor exista: hay que saber si el motor ya
+      # RESPONDE consultas. Tarda entre 30 y 60 segundos en aceptarlas.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+  # --- Inicializador: crea la base y corre el script UNA vez, y se muere ---
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: innovacion-sqlserver-init
+    restart: "no"
+    environment:
+      - MSSQL_SA_PASSWORD=Aplicacionweb123!
+    volumes:
+      - ./db:/scripts:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "/scripts/init.sh"]
+
+  # --- La API entra en la Fase 6 de 8_tasks.md ---
+  # Se agrega cuando exista su Dockerfile. Mientras tanto, este compose
+  # declara solo la base: así `docker compose up -d --build` funciona en
+  # todo momento, sin tener que nombrar servicios.
+
+volumes:
+  mssqldata:
