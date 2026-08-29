@@ -1,0 +1,365 @@
+{
+  "info": {
+    "name": "Innovación Curricular — v1 · aliado",
+    "description": "Los 7 endpoints de la versión 1, en orden didáctico.\n\nAntes de empezar: `docker compose up -d --build`.\n\nLa tabla arranca VACÍA: la petición 2 responde 204, y ese es el estado inicial del sistema. Córrala otra vez después de la 13 y volverá a dar 204.\n\nLas peticiones 8 y 9 son la pareja que enseña la diferencia entre reemplazar y actualizar: el MISMO cuerpo responde 422 en PUT y 200 en PATCH.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "http://localhost:8072"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Diagnóstico",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            ""
+          ]
+        },
+        "description": "RF7 — si esto no responde, la API no está arriba."
+      }
+    },
+    {
+      "name": "2. Listar (vacío → 204)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado"
+          ]
+        },
+        "description": "RF1 — el estado inicial: no hay aliados. Vacío no es error."
+      }
+    },
+    {
+      "name": "3. Crear",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/api/aliado",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado"
+          ]
+        },
+        "description": "RF3 — los seis campos son obligatorios. Esperado: 200.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nit\": 900123456,\n  \"razonSocial\": \"Fundación Tecnológica del Norte\",\n  \"nombreContacto\": \"Ana Restrepo\",\n  \"correo\": \"ana@ftn.edu.co\",\n  \"telefono\": \"604 555 1234\",\n  \"ciudad\": \"Medellín\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "4. Listar (ahora sí → 200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado"
+          ]
+        },
+        "description": "RF1 — ahora el sobre trae total: 1."
+      }
+    },
+    {
+      "name": "5. Listar con límite",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado?limite=1",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado"
+          ],
+          "query": [
+            {
+              "key": "limite",
+              "value": "1"
+            }
+          ]
+        },
+        "description": "RF1 — el único filtro de la v1."
+      }
+    },
+    {
+      "name": "6. Obtener por NIT",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "RF2 — esperado: 200 con el aliado."
+      }
+    },
+    {
+      "name": "7. Obtener un NIT que no existe",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado/999999999",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "999999999"
+          ]
+        },
+        "description": "RF2 — esperado: 404."
+      }
+    },
+    {
+      "name": "8. PUT sin 'correo' → 422",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "Mitad de la pareja: reemplazar exige TODO. Esperado: 422 con errores[].",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razonSocial\": \"Fundación Tecnológica del Norte\",\n  \"nombreContacto\": \"Ana Restrepo\",\n  \"telefono\": \"604 555 1234\",\n  \"ciudad\": \"Medellín\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "9. PATCH con el MISMO cuerpo → 200",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "La otra mitad: actualizar se conforma con lo enviado. Compare con la 8.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razonSocial\": \"Fundación Tecnológica del Norte\",\n  \"nombreContacto\": \"Ana Restrepo\",\n  \"telefono\": \"604 555 1234\",\n  \"ciudad\": \"Medellín\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10. PUT completo",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "RF4 — reemplazo con los cinco campos.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razonSocial\": \"Fundación Tecnológica del Norte\",\n  \"nombreContacto\": \"Ana Restrepo\",\n  \"correo\": \"ana@ftn.edu.co\",\n  \"telefono\": \"604 555 1234\",\n  \"ciudad\": \"Medellín\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "11. PATCH parcial",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "RF5 — solo lo que cambia.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ciudad\": \"Cartagena\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "12. PATCH vacío → 400",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "RF5 — pedir una actualización sin decir qué actualizar es regla de negocio rota. Esperado: 400, no 404.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "13. Eliminar (lógico)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "RF6 — marca activo = 0. La fila NO desaparece de la base. Vuelva a correr la petición 2: responde 204 otra vez."
+      }
+    },
+    {
+      "name": "14. Eliminar otra vez → 404",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base}}/api/aliado/900123456",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "api",
+            "aliado",
+            "900123456"
+          ]
+        },
+        "description": "C9 — para la API ya no existe."
+      }
+    }
+  ]
+}
