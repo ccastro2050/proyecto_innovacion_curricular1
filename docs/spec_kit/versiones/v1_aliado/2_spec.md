@@ -117,6 +117,25 @@ otros nombres.
    con una lista en memoria— y todas sus verificaciones pasan **con SQL
    Server apagado**.
 
+### Criterios de aceptación de la pantalla
+
+La versión no está cerrada sin ellos (Artículo 1.1).
+
+| # | Criterio | Cómo se comprueba |
+|---|---|---|
+| P1 | La pantalla muestra las filas **que dio la API** | `pruebas_humo/humo_front.py` §3: crea una ficha POR LA API y la busca en el texto visible de la pantalla |
+| P2 | Cada pantalla tiene **dirección propia** | `/` y `/aliados` — ninguna con el nombre de la tabla como parámetro (Artículo 10.1) |
+| P3 | La pantalla **no habla en jerga** | Ni `PUT`, ni `PATCH`, ni `422`, ni `/api/`, ni «SQL Server» aparecen en el texto visible |
+| P4 | Los **dos botones de guardar** se comportan distinto | A mano: el mismo formulario a medio llenar — «la ficha completa» lo rechaza, «solo lo que cambié» lo guarda |
+| P5 | Un error **no borra** lo que la persona escribió | A mano: el formulario se queda con los valores puestos |
+| P6 | Vacío **no es error** | Sin filas, la pantalla dice «todavía no hay» y ofrece «Agregar» |
+| P7 | **Con la API apagada la pantalla sigue en pie** | `docker compose stop api-innovacion`: responde 200, con su aviso y **sin un solo dato** |
+
+Los cuatro que dicen «a mano» son los que un guion no puede hacer con Blazor
+Server: los clics viajan por una conexión persistente, no como peticiones
+sueltas. Están escritos paso a paso en [7_quickstart.md](7_quickstart.md), y
+los hace una persona.
+
 ## 6. Clarificaciones
 
 > **Qué es esta sección:** el registro de las ambigüedades detectadas

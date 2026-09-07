@@ -25,10 +25,11 @@ docker compose up -d --build
 
 La primera vez tarda unos minutos: descarga las imágenes, espera a que el
 motor **responda** (no solo a que exista), crea la base con sus 25 tablas y
-sus catálogos, y compila la API. Al terminar:
+sus catálogos, y compila la API **y la pantalla**. Al terminar:
 
 | Qué | Dónde |
 |---|---|
+| **LA PANTALLA** — empiece por aquí | **http://localhost:8073** |
 | **API — diagnóstico** | http://localhost:8072/ |
 | **Documentación interactiva** | http://localhost:8072/swagger |
 | Listado de aliados | http://localhost:8072/api/aliado |
@@ -88,6 +89,15 @@ proyecto_innovacion_curricular1/
 │   ├── Repositorios/                   CAPA 3: datos — el SQL con Dapper
 │   ├── Excepciones/                    cómo el negocio avisa un 404 sin hablar de HTTP
 │   └── pruebas/                        el servicio con un repositorio de mentiras
+├── front_blazor/                     LA PANTALLA: Blazor Server, un TERCER proceso
+│   ├── Program.cs                    registra UN servicio por recurso
+│   ├── Servicios/                    lo ÚNICO que habla HTTP con la API
+│   ├── Components/Pages/             una pantalla por recurso, con dirección propia
+│   └── wwwroot/app.css               los estilos, servidos del propio contenedor
+│
+├── pruebas_humo/                     humo_front.py: recorre el sistema DESDE LA
+│                                     PANTALLA y apaga la API para probar que
+│                                     son procesos distintos
 ├── docs/spec_kit/                      LA FUENTE DE VERDAD (ver abajo)
 ├── postman/                            los 14 endpoints listos para probar con clics
 ├── docker-compose.yml                  TODO el sistema declarado en un archivo

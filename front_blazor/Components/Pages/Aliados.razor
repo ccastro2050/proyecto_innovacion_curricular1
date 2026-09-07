@@ -1,0 +1,348 @@
+@page "/aliados"
+@rendermode InteractiveServer
+@inject ServicioAliado Servicio
+@inject IJSRuntime JS
+
+@*
+    ==================================================================
+    LA PANTALLA DE `aliado`
+    ==================================================================
+
+    Tiene DIRECCIÓN PROPIA —/aliados—, no una con el nombre de la tabla como
+    parámetro. Se puede guardar como marcador, mandar por correo y poner en un
+    menú (Artículo 10.1).
+
+    Y no le habla al usuario en jerga: aquí no aparece «PUT», ni «422», ni
+    «aliado». Los dos botones de guardar se llaman como el usuario
+    piensa; que uno mande un reemplazo y el otro una modificación parcial es
+    asunto del programa.
+*@
+
+<PageTitle>Aliados</PageTitle>
+
+<div class="encabezado">
+    <div>
+        <h1>Aliados</h1>
+        <p class="nota">
+            Las entidades externas con las que la universidad firma alianzas. Un aliado retirado deja de aparecer aquí, pero no se borra: las alianzas que ya se firmaron con él se conservan.
+        </p>
+    </div>
+    @if (!mostrandoFormulario)
+    {
+        <button class="boton primario" @onclick="Agregar">Agregar</button>
+    }
+</div>
+
+@* ─────────── LOS AVISOS ─────────── *@
+@foreach (var error in errores)
+{
+    <p class="aviso error">@error</p>
+}
+@if (!string.IsNullOrEmpty(exito))
+{
+    <p class="aviso exito">@exito</p>
+}
+
+@* ─────────── EL FORMULARIO ─────────── *@
+@if (mostrandoFormulario)
+{
+    <div class="tarjeta-formulario">
+        <h2>@(editando ? "Editar el aliado" : "Agregar el aliado")</h2>
+
+        <label>
+            NIT
+            <input type="number" @bind="campoNit" disabled="@editando" />
+            @if (editando)
+            {
+                <span class="ayuda">
+                    El NIT identifica la ficha y no se cambia. Si está mal, se agrega otra y se retira esta.
+                </span>
+            }
+            else
+            {
+                <span class="ayuda">
+                    El número de identificación tributaria, sin puntos ni guion. No se podrá cambiar después.
+                </span>
+            }
+        </label>
+
+        <label>
+            Razón social
+            <input type="text" maxlength="60" @bind="campoRazonSocial" />
+        </label>
+
+        <label>
+            Nombre del contacto
+            <input type="text" maxlength="60" @bind="campoNombreContacto" />
+        </label>
+
+        <label>
+            Correo
+            <input type="text" maxlength="70" @bind="campoCorreo" />
+        </label>
+
+        <label>
+            Teléfono
+            <input type="text" maxlength="45" @bind="campoTelefono" />
+            <span class="ayuda">Es texto: lleva prefijos, espacios y extensiones.</span>
+        </label>
+
+        <label>
+            Ciudad
+            <input type="text" maxlength="45" @bind="campoCiudad" />
+        </label>
+
+        @*
+            ==============================================================
+            LOS DOS BOTONES, QUE NO HACEN LO MISMO
+
+              · «Guardar la ficha completa» manda todo, así que un dato
+                obligatorio en blanco se rechaza.
+              · «Guardar solo lo que cambié» manda únicamente lo diligenciado,
+                así que el mismo formulario a medio llenar sí se guarda.
+
+            El mismo formulario, dos comportamientos, y la diferencia no la
+            decide ningún `if` de negocio: la decide QUÉ SE ENVÍA.
+            ==============================================================
+        *@
+        <div class="pareja">
+            @if (editando)
+            {
+                <button class="boton primario" @onclick="GuardarCompleta" disabled="@guardando">
+                    Guardar la ficha completa
+                </button>
+                <button class="boton" @onclick="GuardarLoQueCambio" disabled="@guardando">
+                    Guardar solo lo que cambié
+                </button>
+            }
+            else
+            {
+                <button class="boton primario" @onclick="Crear" disabled="@guardando">
+                    Agregar
+                </button>
+            }
+            <button class="boton" @onclick="Cancelar" disabled="@guardando">Cancelar</button>
+        </div>
+
+        @if (editando)
+        {
+            <span class="ayuda">
+                «La ficha completa» exige que los 5 datos obligatorios estén
+                diligenciados. «Solo lo que cambié» guarda lo que usted escribió
+                y deja lo demás como estaba.
+            </span>
+        }
+    </div>
+}
+
+@* ─────────── EL LISTADO ─────────── *@
+@if (cargando)
+{
+    <p class="nota">Cargando…</p>
+}
+else if (filas.Count > 0)
+{
+    <div class="tabla-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th>NIT</th>
+                    <th>Razón social</th>
+                    <th>Nombre del contacto</th>
+                    <th>Correo</th>
+                    <th>Ciudad</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fila in filas)
+                {
+                    <tr>
+                        <td><code>@fila.Nit</code></td>
+                        <td>@fila.RazonSocial</td>
+                        <td>@fila.NombreContacto</td>
+                        <td>@fila.Correo</td>
+                        <td>@fila.Ciudad</td>
+                        <td>
+                            <div class="acciones">
+                                <button class="boton" @onclick="() => Editar(fila)">Editar</button>
+                                <button class="boton peligro" @onclick="() => Retirar(fila)">Retirar</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="nota">@filas.Count ficha(s).</p>
+}
+else
+{
+    @* Vacío NO es un error, y la pantalla lo distingue: si la API está caída,
+       arriba hay además un aviso rojo. *@
+    <p class="vacio">
+        Todavía no hay aliados. Use «Agregar» para crear el primero.
+    </p>
+}
+
+@code {
+    private List<Aliado> filas = new();
+    private List<string> errores = new();
+    private string exito = string.Empty;
+
+    private bool cargando = true;
+    private bool guardando;
+    private bool mostrandoFormulario;
+    private bool editando;
+
+    private int campoNit;
+    private string campoRazonSocial = string.Empty;
+    private string campoNombreContacto = string.Empty;
+    private string campoCorreo = string.Empty;
+    private string campoTelefono = string.Empty;
+    private string campoCiudad = string.Empty;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Cargar()
+    {
+        cargando = true;
+        var r = await Servicio.Listar();
+        cargando = false;
+
+        // Aun con error se pinta la pantalla: el usuario ve el aviso DENTRO de
+        // la aplicación, no una página de excepción.
+        errores = r.Errores;
+        filas = r.Ok ? r.Datos! : new();
+    }
+
+    private void Agregar()
+    {
+        Limpiar();
+        editando = false;
+        mostrandoFormulario = true;
+    }
+
+    private void Editar(Aliado fila)
+    {
+        campoNit = fila.Nit;
+        campoRazonSocial = fila.RazonSocial;
+        campoNombreContacto = fila.NombreContacto;
+        campoCorreo = fila.Correo;
+        campoTelefono = fila.Telefono;
+        campoCiudad = fila.Ciudad;
+        editando = true;
+        mostrandoFormulario = true;
+        errores = new();
+        exito = string.Empty;
+    }
+
+    private void Cancelar()
+    {
+        mostrandoFormulario = false;
+        Limpiar();
+    }
+
+    private void Limpiar()
+    {
+        campoNit = 0;
+        campoRazonSocial = string.Empty;
+        campoNombreContacto = string.Empty;
+        campoCorreo = string.Empty;
+        campoTelefono = string.Empty;
+        campoCiudad = string.Empty;
+        errores = new();
+        exito = string.Empty;
+    }
+
+    private async Task Crear()
+    {
+        guardando = true;
+        var r = await Servicio.Crear(new Aliado
+        {
+            Nit = campoNit,
+            RazonSocial = campoRazonSocial.Trim(),
+            NombreContacto = campoNombreContacto.Trim(),
+            Correo = campoCorreo.Trim(),
+            Telefono = campoTelefono.Trim(),
+            Ciudad = campoCiudad.Trim(),
+        });
+        guardando = false;
+
+        await TrasGuardar(r, $"Se agregó el aliado {campoNit}.");
+    }
+
+    private async Task GuardarCompleta()
+    {
+        guardando = true;
+        var r = await Servicio.Reemplazar(campoNit, new Aliado
+        {
+            RazonSocial = campoRazonSocial.Trim(),
+            NombreContacto = campoNombreContacto.Trim(),
+            Correo = campoCorreo.Trim(),
+            Telefono = campoTelefono.Trim(),
+            Ciudad = campoCiudad.Trim(),
+        });
+        guardando = false;
+
+        await TrasGuardar(r, $"Se guardó el aliado {campoNit}.");
+    }
+
+    private async Task GuardarLoQueCambio()
+    {
+        guardando = true;
+        var r = await Servicio.Actualizar(
+            campoNit,
+            campoRazonSocial,
+            campoNombreContacto,
+            campoCorreo,
+            campoTelefono,
+            campoCiudad);
+        guardando = false;
+
+        await TrasGuardar(r, $"Se guardó el aliado {campoNit}.");
+    }
+
+    /// <summary>
+    /// Lo que pasa después de cualquier guardado: si salió bien se cierra el
+    /// formulario y se recarga; si no, **el formulario se queda con lo que la
+    /// persona había escrito**, porque perder lo digitado por un error de
+    /// validación es castigarla dos veces.
+    /// </summary>
+    private async Task TrasGuardar(Resultado<bool> r, string mensaje)
+    {
+        if (r.Ok)
+        {
+            mostrandoFormulario = false;
+            exito = mensaje;
+            errores = new();
+            await Cargar();
+        }
+        else
+        {
+            errores = r.Errores;
+            exito = string.Empty;
+        }
+    }
+
+    private async Task Retirar(Aliado fila)
+    {
+        // Se pregunta antes: retirar no se deshace desde esta pantalla.
+        var seguro = await JS.InvokeAsync<bool>(
+            "confirm", $"¿Retirar {fila.Nit} del uso?");
+        if (!seguro) return;
+
+        var r = await Servicio.Eliminar(fila.Nit);
+        if (r.Ok)
+        {
+            exito = $"Se retiró el aliado {fila.Nit}.";
+            errores = new();
+            await Cargar();
+        }
+        else
+        {
+            errores = r.Errores;
+            exito = string.Empty;
+        }
+    }
+}

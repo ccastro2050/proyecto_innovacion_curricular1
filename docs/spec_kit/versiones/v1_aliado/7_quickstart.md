@@ -133,3 +133,47 @@ todos deben seguir pasando antes de cerrar la nueva.
 | El contenedor de SQL Server se reinicia solo | Contraseña que no cumple la política (8+ caracteres, mayúscula, minúscula, dígito y símbolo) o poca memoria: pide ~2 GB |
 | Un inactivo aparece en el listado | A alguna consulta le falta `WHERE activo = 1` ([3_plan](3_plan.md) §4.2) |
 | `bad interpreter: /bin/bash^M` | `db/init.sh` se guardó con finales de línea de Windows. Es lo que previene `*.sh text eol=lf` en `.gitattributes` |
+
+---
+
+## Y la pantalla
+
+Los criterios de arriba son de la API. **La versión no está cerrada sin su
+pantalla** (Artículo 1.1), y la pantalla se comprueba de dos maneras.
+
+### Con el guion, que hace la mitad automática
+
+```powershell
+python pruebas_humo/humo_front.py
+```
+
+Comprueba que cada pantalla responde por su dirección, que **el HTML ya trae
+los datos de la API**, que no hay jerga, y —lo que importa— **apaga la API** y
+verifica que la pantalla siga en pie, con su aviso y sin un solo dato.
+
+> Tarda **varios minutos**, y no está colgada: para volver a encender la API
+> hay que esperar a que `dotnet watch` la recompile.
+
+### A mano, que es la mitad que ningún guion puede hacer
+
+Blazor Server manda los clics por una conexión persistente, no como peticiones
+HTTP sueltas: un guion no puede llenar el formulario. Esto sí lo hace una
+persona, en **http://localhost:8073**:
+
+1. entrar a **Aliados**: se ve el listado (o el recuadro de «todavía no
+   hay», si la tabla está vacía — **vacío no es error**);
+2. **Agregar** una ficha, llenarla y guardar: aparece el aviso verde y la
+   ficha entra en la tabla;
+3. **Editar** esa ficha, borrar un campo obligatorio y oprimir **«Guardar la
+   ficha completa»**: se rechaza, el motivo sale **en español**, y **lo que
+   usted escribió sigue ahí**;
+4. con el mismo formulario a medio llenar, oprimir **«Guardar solo lo que
+   cambié»**: ahora sí guarda. Ésa es la diferencia entre reemplazar y
+   actualizar, vista desde el lado del usuario — y no la decide ningún `if`,
+   la decide qué se envía;
+5. **Retirar** la ficha: pregunta antes, y después desaparece del listado. Y
+   **sigue en la base** con `activo = 0`, porque el borrado es lógico
+   (Artículo 6).
+
+Fíjese en lo que **no** aparece en ninguna de esas cinco pantallas: ni `PUT`,
+ni `PATCH`, ni un número de estado, ni el nombre de la tabla.

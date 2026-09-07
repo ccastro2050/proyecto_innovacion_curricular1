@@ -1,5 +1,11 @@
 # Mapa de versiones — Módulo Innovación Curricular
 
+> **Cada versión entrega su API *y* su pantalla** (Artículo 1.1). No hay una
+> versión «de front» al final: la v1 ya trae la suya, en Blazor Server, en su
+> propio contenedor y en el puerto **8073**. Una versión no está
+> cerrada si la API responde y la pantalla no.
+
+
 > La ruta completa del proyecto. Cada versión se especifica **solo cuando
 > la anterior está cerrada** (commit + tag). Este mapa da la dirección; el
 > spec kit de cada versión da el detalle.
