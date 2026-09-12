@@ -65,7 +65,22 @@ public class RepositorioFalso : IRepositorioAliado
 
 public class Programa
 {
-    public static async Task Main(string[] args)
+    // Recuerda si alguna comprobación falló. Sin esto la prueba narra el
+    // problema pero el proceso termina bien, y nadie que la corra se entera.
+    private static bool _bien = true;
+
+    /// <summary>
+    /// La línea que PUEDE FALLAR: comprueba la condición, dice qué pasó y deja
+    /// constancia si no se cumplió. Es un «assert» escrito a mano: lo mismo que
+    /// hace Assert.Equal de xUnit, sin instalar el framework.
+    /// </summary>
+    private static void Revisar(bool condicion, string ok, string error)
+    {
+        Console.WriteLine(condicion ? $"[OK] {ok}" : $"[ERROR] {error}");
+        if (!condicion) _bien = false;
+    }
+
+    public static async Task<int> Main(string[] args)
     {
         Console.WriteLine("=== Prueba de capas — SIN base de datos ===");
 
@@ -84,69 +99,75 @@ public class Programa
 
         // 1. El sistema arranca vacío
         var vacio = await servicio.ObtenerTodos(1000);
-        Console.WriteLine(vacio.Any()
-            ? "[ERROR] Debía arrancar sin aliados."
-            : "[OK] El sistema arranca vacío: sin aliados.");
+        Revisar(!vacio.Any(),
+                "El sistema arranca vacío: sin aliados.",
+                "Debía arrancar sin aliados.");
 
         // 2. Crear y listar
         await servicio.Crear(nuevo);
         var lista = (await servicio.ObtenerTodos(1000)).ToList();
-        Console.WriteLine(lista.Count == 1
-            ? $"[OK] Aliado creado y listado: {lista[0].RazonSocial}"
-            : "[ERROR] Debía haber exactamente un aliado.");
+        Revisar(lista.Count == 1,
+                $"Aliado creado y listado: {lista[0].RazonSocial}",
+                "Debía haber exactamente un aliado.");
 
         // 3. Buscar uno que no existe lanza NoEncontradoExcepcion
         try
         {
             await servicio.ObtenerPorNit(999999999);
-            Console.WriteLine("[ERROR] Debió lanzar NoEncontradoExcepcion.");
+            Revisar(false, "", "Debió lanzar NoEncontradoExcepcion.");
         }
         catch (NoEncontradoExcepcion)
         {
-            Console.WriteLine("[OK] Buscar un NIT inexistente lanza NoEncontradoExcepcion.");
+            Revisar(true, "Buscar un NIT inexistente lanza NoEncontradoExcepcion.", "");
         }
 
         // 4. El límite inválido es regla de negocio: ArgumentException (→ 400)
         try
         {
             await servicio.ObtenerTodos(0);
-            Console.WriteLine("[ERROR] Debió lanzar ArgumentException.");
+            Revisar(false, "", "Debió lanzar ArgumentException.");
         }
         catch (ArgumentException)
         {
-            Console.WriteLine("[OK] Límite menor o igual a cero rechazado con ArgumentException.");
+            Revisar(true, "Límite menor o igual a cero rechazado con ArgumentException.", "");
         }
 
         // 5. PATCH sin campos: 400, no 404. Es la diferencia que más se rompe.
         try
         {
             await servicio.ActualizarParcial(900123456, null, null, null, null, null);
-            Console.WriteLine("[ERROR] Debió lanzar ArgumentException por cuerpo vacío.");
+            Revisar(false, "", "Debió lanzar ArgumentException por cuerpo vacío.");
         }
         catch (ArgumentException)
         {
-            Console.WriteLine("[OK] Cuerpo vacío en actualización parcial rechazado con ArgumentException.");
+            Revisar(true, "Cuerpo vacío en actualización parcial rechazado con ArgumentException.", "");
         }
 
         // 6. Eliminar dos veces: la segunda falla como inexistente (C9)
         await servicio.Eliminar(900123456);
-        Console.WriteLine("[OK] Primera eliminación realizada.");
+        Console.WriteLine("Primera eliminación realizada.");   // narra, no comprueba
         try
         {
             await servicio.Eliminar(900123456);
-            Console.WriteLine("[ERROR] La segunda eliminación debió lanzar NoEncontradoExcepcion.");
+            Revisar(false, "", "La segunda eliminación debió lanzar NoEncontradoExcepcion.");
         }
         catch (NoEncontradoExcepcion)
         {
-            Console.WriteLine("[OK] Segunda eliminación rechazada: para la API ya no existe.");
+            Revisar(true, "Segunda eliminación rechazada: para la API ya no existe.", "");
         }
 
         // 7. Y el sistema vuelve a estar vacío
         var final = await servicio.ObtenerTodos(1000);
-        Console.WriteLine(final.Any()
-            ? "[ERROR] Debía quedar vacío otra vez."
-            : "[OK] Tras el borrado, el sistema vuelve a estar vacío.");
+        Revisar(!final.Any(),
+                "Tras el borrado, el sistema vuelve a estar vacío.",
+                "Debía quedar vacío otra vez.");
 
-        Console.WriteLine("=== Prueba de capas completada CON ÉXITO ===");
+        Console.WriteLine(_bien
+            ? "=== Prueba de capas completada CON ÉXITO ==="
+            : "=== Prueba de capas FALLIDA: mire los [ERROR] de arriba ===");
+
+        // El código de salida es lo que mira quien corre la prueba en
+        // automático: 0 = pasó, cualquier otra cosa = falló.
+        return _bien ? 0 : 1;
     }
 }
